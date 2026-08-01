@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Playlist</title>
+<meta name="theme-color" content="#0D0D0F">
+<meta name="description" content="Playlists πρόβας για μουσικούς — οργάνωση, ετικέτες, κοινή χρήση.">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Playlist">
+
+<!-- iOS splash screens -->
+<link rel="apple-touch-startup-image" href="icons/splash-750x1334.png"
+  media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="icons/splash-1170x2532.png"
+  media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-1284x2778.png"
+  media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="icons/splash-1536x2048.png"
+  media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D0D0F;
+  --bg2:#101013;
+  --panel:#171719;
+  --panel2:#1E1E22;
+  --line:#2A2A30;
+  --line2:#34343B;
+  --txt:#ECEAE4;
+  --soft:#8C8C95;
+  --dim:#5A5A62;
+  --amber:#F2B03D;
+  --amber2:#FF8C1E;
+  --tech:#5BD3BC;
+  --tech-d:#11302C;
+  --purple:#7c5cbf;
+  --purple2:#9b7dd4;
+  --purple-d:#1e1535;
+  --danger:#e0605a;
+  --r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;scrollbar-width:none;-ms-overflow-style:none;}
+html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;}
+*::-webkit-scrollbar{display:none;}
+body{min-height:100vh;overflow-x:hidden;}
+button,input,textarea{font-family:inherit;}
+.app{max-width:460px;margin:0 auto;min-height:100vh;background:
+   radial-gradient(120% 60% at 50% -10%, #19140A 0%, rgba(25,20,10,0) 55%),
+   var(--bg);
+  padding:0 0 30px;position:relative;-webkit-overflow-scrolling:touch;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.view[hidden]{display:none;}
+
+/* ===== HOME HEADER ===== */
+.ph-header{padding:30px 22px 10px;display:flex;justify-content:space-between;align-items:center;gap:14px;}
+.wm-simple{font-family:'Anton',sans-serif;font-size:44px;letter-spacing:.5px;
+  background:linear-gradient(95deg,var(--amber),var(--amber2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.exbtn{position:relative;flex-shrink:0;width:52px;height:52px;border-radius:16px;background:var(--panel);
+  border:1px solid var(--line);color:var(--txt);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.exbtn:active{background:var(--panel2);}
+.exbtn:disabled{opacity:.35;}
+.exbadge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 4px;border-radius:10px;
+  background:var(--amber2);color:#1a1206;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);}
+
+/* ===== FILTERS ===== */
+.filters{display:flex;gap:8px;padding:12px 22px 4px;overflow-x:auto;}
+.chip{flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.6px;font-weight:700;
+  padding:9px 14px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--soft);
+  cursor:pointer;text-transform:uppercase;transition:.15s;white-space:nowrap;}
+.chip:active{transform:scale(.96);}
+.chip.on{color:#1a1206;border-color:transparent;}
+.chip.on[data-tag="all"]{background:linear-gradient(95deg,var(--txt),#c9c8c2);color:#1a1206;}
+.chip.on[data-tag="telikh"]{background:linear-gradient(95deg,var(--amber),var(--amber2));}
+.chip.on[data-tag="meleti"]{background:linear-gradient(95deg,var(--tech),#3fb39c);color:#06201c;}
+.chip.on[data-tag="nea"]{background:linear-gradient(95deg,var(--purple),var(--purple2));color:#fff;}
+
+/* ===== PLAYLIST CARDS ===== */
+.plist{padding:14px 18px 0;display:flex;flex-direction:column;gap:10px;}
+.plcard{position:relative;display:flex;align-items:center;gap:13px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 14px 16px 16px;cursor:pointer;border-left:4px solid var(--dim);}
+.plcard[data-tag="telikh"]{border-left-color:var(--amber);}
+.plcard[data-tag="meleti"]{border-left-color:var(--tech);}
+.plcard[data-tag="nea"]{border-left-color:var(--purple);}
+.plcard .body{flex:1;min-width:0;}
+.plcard .nm{font-size:16.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.plcard .meta{margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.tagpill{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.6px;padding:3px 8px;border-radius:7px;text-transform:uppercase;font-weight:700;}
+.tagpill[data-tag="telikh"]{color:var(--amber);border:1px solid #3a2d12;background:#1c1709;}
+.tagpill[data-tag="meleti"]{color:var(--tech);border:1px solid #1c3d38;background:var(--tech-d);}
+.tagpill[data-tag="nea"]{color:#c4a8f0;border:1px solid var(--purple);background:var(--purple-d);}
+.plcard .cnt{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);}
+.dotsbtn{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:transparent;border:none;color:var(--soft);font-size:18px;cursor:pointer;}
+.dotsbtn:active{background:var(--panel2);}
+.empty{padding:60px 30px;text-align:center;color:var(--dim);font-size:14px;line-height:1.6;}
+
+/* ===== FAB / ADD BAR ===== */
+.fab-wrap{position:sticky;bottom:0;padding:16px 18px calc(16px + env(safe-area-inset-bottom));margin-top:18px;
+  background:linear-gradient(180deg,rgba(13,13,15,0) 0%,var(--bg) 40%);}
+.fab{width:100%;font-family:'Anton',sans-serif;font-size:17px;letter-spacing:.6px;padding:16px;border-radius:14px;border:none;
+  cursor:pointer;background:linear-gradient(95deg,var(--amber),var(--amber2));color:#1a1206;box-shadow:0 10px 30px -10px rgba(242,176,61,.6);}
+.fab:active{transform:scale(.98);}
+
+/* ===== DETAIL HEADER ===== */
+.dt-header{padding:22px 18px 8px;display:flex;align-items:center;gap:10px;}
+.backbtn{flex-shrink:0;width:40px;height:40px;border-radius:12px;background:var(--panel);border:1px solid var(--line);
+  color:var(--txt);font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.backbtn:active{background:var(--panel2);}
+.dt-title{flex:1;min-width:0;font-family:'Anton',sans-serif;font-size:24px;letter-spacing:.3px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:text;}
+.dt-tagpill{flex-shrink:0;}
+.dt-actions{display:flex;gap:8px;flex-shrink:0;}
+.iconbtn{width:40px;height:40px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--txt);
+  font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.iconbtn:active{background:var(--panel2);}
+.iconbtn:disabled{opacity:.35;cursor:default;}
+
+/* ===== SONG LIST ===== */
+.songlist{padding:10px 14px 4px;display:flex;flex-direction:column;gap:9px;}
+.songcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 12px 13px 6px;
+  display:flex;align-items:flex-start;gap:6px;touch-action:pan-y;}
+.songcard.dragging{opacity:.55;border-color:var(--amber);}
+.draghandle{flex-shrink:0;width:26px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--dim);
+  font-size:17px;cursor:grab;touch-action:none;}
+.songcard .idx{font-family:'Anton',sans-serif;font-size:16px;width:20px;flex-shrink:0;color:var(--amber);padding-top:2px;text-align:center;}
+.songcard .body{flex:1;min-width:0;}
+.songcard .nm{font-size:15.5px;font-weight:600;word-wrap:break-word;}
+.songcard .notes{font-size:13px;color:var(--soft);margin-top:4px;white-space:pre-wrap;word-wrap:break-word;}
+.songcard .atts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.attchip{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.3px;padding:5px 9px;border-radius:8px;
+  background:var(--panel2);border:1px solid var(--line);color:var(--soft);text-decoration:none;display:inline-flex;
+  align-items:center;gap:5px;cursor:pointer;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.attchip.pdf{color:var(--tech);border-color:#1c3d38;}
+.songcard .cardacts{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.miniBtn{width:32px;height:32px;border-radius:9px;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);
+  font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.miniBtn:active{transform:scale(.94);}
+.miniBtn.del{color:var(--danger);}
+.addsongbtn{margin:6px 14px 0;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;font-weight:700;
+  padding:14px;border-radius:13px;border:1.5px dashed var(--line2);background:transparent;color:var(--soft);
+  cursor:pointer;text-align:center;text-transform:uppercase;}
+.addsongbtn:active{background:var(--panel);}
+
+/* ===== MOTTO ===== */
+.motto{margin:34px 22px 10px;text-align:center;font-size:12.5px;font-style:italic;color:var(--dim);line-height:1.6;
+  font-family:'DM Sans',sans-serif;}
+.motto::before,.motto::after{content:'"';}
+
+/* ===== OVERLAY / MODAL ===== */
+.overlay{position:fixed;inset:0;z-index:90;background:rgba(8,8,9,.82);backdrop-filter:blur(8px);
+  display:none;flex-direction:column;justify-content:flex-end;}
+.overlay.show{display:flex;}
+.sheet{background:var(--bg2);border-top-left-radius:22px;border-top-right-radius:22px;border:1px solid var(--line);
+  border-bottom:none;max-height:88vh;display:flex;flex-direction:column;padding:18px 20px calc(20px + env(safe-area-inset-bottom));
+  max-width:460px;margin:0 auto;width:100%;}
+.sheet.center{border-radius:20px;border-bottom:1px solid var(--line);margin:auto;max-height:none;}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.sheet-head h3{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:.3px;}
+.sheet-body{overflow:auto;display:flex;flex-direction:column;gap:14px;}
+.field label{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--dim);
+  text-transform:uppercase;margin-bottom:7px;}
+.field input[type=text],.field input[type=url],.field textarea{width:100%;background:var(--panel);border:1px solid var(--line);
+  border-radius:11px;padding:12px 13px;color:var(--txt);font-size:14.5px;resize:vertical;}
+.field textarea{min-height:70px;font-family:'DM Sans',sans-serif;}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--line2);}
+.tagpicker{display:flex;gap:8px;}
+.tagopt{flex:1;padding:11px 4px;border-radius:11px;border:1.5px solid var(--line);background:var(--panel);color:var(--soft);
+  font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;
+  text-align:center;font-weight:700;}
+.tagopt.sel[data-tag="telikh"]{background:linear-gradient(95deg,var(--amber),var(--amber2));color:#1a1206;border-color:transparent;}
+.tagopt.sel[data-tag="meleti"]{background:linear-gradient(95deg,var(--tech),#3fb39c);color:#06201c;border-color:transparent;}
+.tagopt.sel[data-tag="nea"]{background:linear-gradient(95deg,var(--purple),var(--purple2));color:#fff;border-color:transparent;}
+.attlist{display:flex;flex-direction:column;gap:8px;}
+.attrow{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 10px;}
+.attrow .lb{flex:1;min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.attrow .rm{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:var(--panel2);border:none;color:var(--danger);cursor:pointer;}
+.addattbtns{display:flex;gap:8px;}
+.smallbtn{flex:1;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.5px;font-weight:700;padding:10px;
+  border-radius:10px;border:1px solid var(--line2);background:var(--panel2);color:var(--txt);cursor:pointer;text-transform:uppercase;}
+.smallbtn:active{transform:scale(.96);}
+.sheet-foot{display:flex;gap:10px;margin-top:18px;flex-shrink:0;}
+.btn-cancel,.btn-save{flex:1;padding:13px;border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:12px;
+  letter-spacing:1px;font-weight:700;cursor:pointer;text-transform:uppercase;border:none;}
+.btn-cancel{background:var(--panel2);color:var(--soft);border:1px solid var(--line);}
+.btn-save{background:linear-gradient(95deg,var(--amber),var(--amber2));color:#1a1206;}
+.btn-save:active,.btn-cancel:active{transform:scale(.97);}
+.sheet-list{display:flex;flex-direction:column;gap:8px;}
+.actionrow{padding:14px 4px;font-size:15px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:10px;}
+.actionrow:last-child{border-bottom:none;}
+.actionrow.danger{color:var(--danger);}
+.actionrow:active{opacity:.6;}
+
+/* ===== EXERCISES ===== */
+.exlist{display:flex;flex-direction:column;gap:10px;}
+.excard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;}
+.excard .nm{font-size:15px;font-weight:600;}
+.excard .notes{font-size:12.5px;color:var(--soft);margin-top:5px;white-space:pre-wrap;}
+.excard .exlink{margin-top:8px;}
+.excard .row2{display:flex;align-items:center;justify-content:space-between;margin-top:11px;gap:10px;}
+.exdots{display:flex;gap:5px;align-items:center;}
+.exdot{width:9px;height:9px;border-radius:50%;background:var(--line2);}
+.exdot.on{background:var(--tech);}
+.exweeklabel{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim);letter-spacing:.5px;}
+.exbtns{display:flex;gap:6px;}
+.todaybtn{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.4px;font-weight:700;padding:8px 12px;
+  border-radius:9px;border:1px solid var(--line2);background:var(--panel2);color:var(--soft);cursor:pointer;text-transform:uppercase;}
+.todaybtn.done{background:var(--tech);color:#06201c;border-color:transparent;}
+.exreminder{margin:0 0 14px;padding:11px 14px;border-radius:12px;background:#1c1709;border:1px solid #3a2d12;color:var(--amber);
+  font-size:12.5px;line-height:1.5;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--panel2);
+  border:1px solid var(--line2);color:var(--txt);padding:11px 18px;border-radius:12px;font-size:13px;z-index:200;
+  opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ HOME VIEW ============ -->
+  <div class="view" id="homeView">
+    <header class="ph-header">
+      <div class="wm-simple">Playlist</div>
+      <div style="display:flex;gap:8px;">
+        <button class="exbtn" id="homeUndoBtn" title="Αναίρεση" disabled style="font-size:19px;">↺</button>
+        <button class="exbtn" id="exBtn" title="Ασκήσεις"><span>🎸</span><span class="exbadge" id="exBadge" hidden>0</span></button>
+      </div>
+    </header>
+    <div class="filters" id="filters"></div>
+    <div class="plist" id="plistContainer"></div>
+    <div class="fab-wrap"><button class="fab" id="newPlaylistBtn">+ Νέα Playlist</button></div>
+  </div>
+
+  <!-- ============ DETAIL VIEW ============ -->
+  <div class="view" id="detailView" hidden>
+    <header class="dt-header">
+      <button class="backbtn" id="backBtn">←</button>
+      <div class="dt-title" id="dtTitle" title="Πάτησε για επεξεργασία ονόματος"></div>
+      <div class="dt-actions">
+        <button class="iconbtn" id="undoBtn" title="Αναίρεση" disabled>↺</button>
+        <button class="iconbtn" id="shareBtn" title="Κοινή χρήση">⇪</button>
+      </div>
+    </header>
+    <div id="dtTagRow" style="padding:0 18px 6px;"></div>
+    <div class="songlist" id="songlistContainer"></div>
+    <button class="addsongbtn" id="addSongBtn">+ Προσθήκη κομματιού</button>
+    <div class="motto">Amateurs practice until they get it right. Professionals practice until they can't get it wrong.</div>
+  </div>
+
+</div>
+
+<!-- ============ EXERCISES OVERLAY ============ -->
+<div class="overlay" id="exOverlay">
+  <div class="sheet" style="max-height:92vh;">
+    <div class="sheet-head">
+      <h3>Ασκήσεις</h3>
+      <button class="iconbtn" id="exCloseBtn">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="exreminder">Στόχος: 3 φορές/εβδομάδα ανά άσκηση. Η υπενθύμιση εμφανίζεται εδώ κάθε φορά που ανοίγεις την εφαρμογή — δεν στέλνει ειδοποιήσεις στο κινητό.</div>
+      <div class="exlist" id="exListContainer"></div>
+      <button class="addsongbtn" id="addExBtn">+ Προσθήκη άσκησης</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NEW/EDIT PLAYLIST MODAL ============ -->
+<div class="overlay" id="plModal">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="plModalTitle">Νέα Playlist</h3><button class="iconbtn" id="plModalCloseBtn">✕</button></div>
+    <div class="sheet-body">
+      <div class="field">
+        <label>Όνομα</label>
+        <input type="text" id="plNameInput" placeholder="π.χ. Πρόβα Τετάρτης">
+      </div>
+      <div class="field">
+        <label>Ετικέτα</label>
+        <div class="tagpicker" id="plTagPicker">
+          <div class="tagopt" data-tag="telikh">Τελική</div>
+          <div class="tagopt" data-tag="meleti">Μελέτη</div>
+          <div class="tagopt" data-tag="nea">Νέα Κομμάτια</div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-cancel" id="plModalCancelBtn">Ακύρωση</button>
+      <button class="btn-save" id="plModalSaveBtn">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NEW/EDIT SONG MODAL ============ -->
+<div class="overlay" id="songModal">
+  <div class="sheet" style="max-height:92vh;">
+    <div class="sheet-head"><h3 id="songModalTitle">Νέο Κομμάτι</h3><button class="iconbtn" id="songModalCloseBtn">✕</button></div>
+    <div class="sheet-body">
+      <div class="field">
+        <label>Τίτλος</label>
+        <input type="text" id="songTitleInput" placeholder="π.χ. Zombie">
+      </div>
+      <div class="field">
+        <label>Σημειώσεις / Καλλιτέχνης</label>
+        <textarea id="songNotesInput" placeholder="Καλλιτέχνης, μπάρες, ρυθμός, ό,τι θες..."></textarea>
+      </div>
+      <div class="field">
+        <label>Συνημμένα (links / pdf)</label>
+        <div class="attlist" id="songAttList"></div>
+        <div class="addattbtns" style="margin-top:10px;">
+          <button class="smallbtn" id="addLinkBtn">+ Link</button>
+          <button class="smallbtn" id="addPdfBtn">+ PDF</button>
+        </div>
+        <input type="file" id="pdfFileInput" accept="application/pdf" hidden>
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-cancel" id="songModalCancelBtn">Ακύρωση</button>
+      <button class="btn-save" id="songModalSaveBtn">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADD LINK MINI MODAL ============ -->
+<div class="overlay" id="linkModal">
+  <div class="sheet" style="max-height:60vh;">
+    <div class="sheet-head"><h3>Προσθήκη Link</h3><button class="iconbtn" id="linkModalCloseBtn">✕</button></div>
+    <div class="sheet-body">
+      <div class="field"><label>Τίτλος (προαιρετικό)</label><input type="text" id="linkLabelInput" placeholder="π.χ. Songsterr tab"></div>
+      <div class="field"><label>URL</label><input type="url" id="linkUrlInput" placeholder="https://..."></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-cancel" id="linkModalCancelBtn">Ακύρωση</button>
+      <button class="btn-save" id="linkModalSaveBtn">Προσθήκη</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NEW/EDIT EXERCISE MODAL ============ -->
+<div class="overlay" id="exModal">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="exModalTitle">Νέα Άσκηση</h3><button class="iconbtn" id="exModalCloseBtn">✕</button></div>
+    <div class="sheet-body">
+      <div class="field"><label>Τίτλος</label><input type="text" id="exTitleInput" placeholder="π.χ. Χρωματική Ασκηση"></div>
+      <div class="field"><label>Οδηγίες / Σημειώσεις</label><textarea id="exNotesInput" placeholder="Περιγραφή, bpm, tabs..."></textarea></div>
+      <div class="field"><label>Link (προαιρετικό)</label><input type="url" id="exLinkInput" placeholder="https://..."></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-cancel" id="exModalCancelBtn">Ακύρωση</button>
+      <button class="btn-save" id="exModalSaveBtn">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PLAYLIST ACTIONS SHEET ============ -->
+<div class="overlay" id="plActionsSheet">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="plActionsTitle">Playlist</h3><button class="iconbtn" id="plActionsCloseBtn">✕</button></div>
+    <div class="sheet-list">
+      <div class="actionrow" id="actOpen">📂 Άνοιγμα</div>
+      <div class="actionrow" id="actRename">✎ Μετονομασία / Ετικέτα</div>
+      <div class="actionrow" id="actShare">⇪ Κοινή χρήση</div>
+      <div class="actionrow danger" id="actDelete">🗑 Διαγραφή</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIRM MODAL ============ -->
+<div class="overlay" id="confirmOverlay">
+  <div class="sheet" style="max-height:40vh;">
+    <div class="sheet-body">
+      <div id="confirmMsg" style="font-size:14.5px;line-height:1.6;padding:10px 2px;"></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-cancel" id="confirmNo">Άκυρο</button>
+      <button class="btn-save" id="confirmYes">Ναι</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SHARE LINK MODAL ============ -->
+<div class="overlay" id="shareLinkModal">
+  <div class="sheet" style="max-height:50vh;">
+    <div class="sheet-head"><h3>Κοινή χρήση Playlist</h3><button class="iconbtn" id="shareLinkCloseBtn">✕</button></div>
+    <div class="sheet-body">
+      <div class="field"><label>Σύνδεσμος</label><input type="text" id="shareLinkOutput" readonly></div>
+      <div id="shareLinkNote" style="font-size:12px;color:var(--dim);line-height:1.5;"></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-cancel" id="shareLinkCloseBtn2">Κλείσιμο</button>
+      <button class="btn-save" id="shareLinkCopyBtn">Αντιγραφή</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= STATE ================= */
+const STORE_KEY = 'gbPlaylistApp_v1';
+const TAGS = {
+  telikh: {label:'Τελική'},
+  meleti: {label:'Μελέτη'},
+  nea: {label:'Νέα Κομμάτια'}
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.playlists)) {
+        if(!Array.isArray(parsed.exercises)) parsed.exercises = [];
+        return parsed;
+      }
+    }
+  }catch(e){}
+  return {playlists:[], exercises:[]};
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); }
+  catch(e){ toast('Δεν ήταν δυνατή η αποθήκευση — ο χώρος αποθήκευσης μπορεί να είναι γεμάτος.'); }
+}
+
+let STATE = loadState();
+let undoStack = [];
+let currentFilter = 'all';
+let currentPlaylistId = null;
+let editingPlaylistId = null;
+let editingSongId = null;
+let editingExerciseId = null;
+let pendingAttachments = [];
+let actionsPlaylistId = null;
+let confirmAction = null;
+
+/* ================= UTIL ================= */
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s){ return escapeHtml(s); }
+function uid(prefix){ return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+let toastTimer=null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+/* ================= UNDO ================= */
+function pushUndo(){
+  undoStack.push(JSON.stringify(STATE));
+  if(undoStack.length>25) undoStack.shift();
+  refreshUndoBtn();
+}
+function doUndo(){
+  if(!undoStack.length) return;
+  STATE = JSON.parse(undoStack.pop());
+  saveState();
+  refreshUndoBtn();
+  updateExBadge();
+  if(currentPlaylistId){
+    if(STATE.playlists.find(p=>p.id===currentPlaylistId)) renderDetail();
+    else goHome();
+  } else {
+    renderHome();
+  }
+}
+function refreshUndoBtn(){
+  const disabled = undoStack.length===0;
+  const b1 = document.getElementById('undoBtn'); if(b1) b1.disabled = disabled;
+  const b2 = document.getElementById('homeUndoBtn'); if(b2) b2.disabled = disabled;
+}
+
+/* ================= NAVIGATION ================= */
+function currentPlaylist(){ return STATE.playlists.find(p=>p.id===currentPlaylistId); }
+function openPlaylist(id){
+  currentPlaylistId = id;
+  document.getElementById('homeView').hidden = true;
+  document.getElementById('detailView').hidden = false;
+  renderDetail();
+}
+function goHome(){
+  currentPlaylistId = null;
+  document.getElementById('detailView').hidden = true;
+  document.getElementById('homeView').hidden = false;
+  renderHome();
+}
+
+/* ================= HOME RENDER ================= */
+function renderFilters(){
+  const wrap = document.getElementById('filters');
+  const defs = [
+    {key:'all',label:'Όλα'},
+    {key:'telikh',label:'Τελική'},
+    {key:'meleti',label:'Μελέτη'},
+    {key:'nea',label:'Νέα Κομμάτια'}
+  ];
+  wrap.innerHTML = defs.map(d=>`<button class="chip ${currentFilter===d.key?'on':''}" data-tag="${d.key}">${d.label}</button>`).join('');
+  wrap.querySelectorAll('.chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentFilter = btn.dataset.tag;
+      renderFilters();
+      renderPlaylistList();
+    });
+  });
+}
+function renderPlaylistList(){
+  const wrap = document.getElementById('plistContainer');
+  let items = STATE.playlists;
+  if(currentFilter!=='all') items = items.filter(p=>p.tag===currentFilter);
+  if(!items.length){
+    wrap.innerHTML = '<div class="empty">'+(currentFilter!=='all' ? 'Δεν υπάρχουν playlists με αυτή την ετικέτα.' : 'Δεν υπάρχουν playlists ακόμα.<br>Πρόσθεσε την πρώτη σου!')+'</div>';
+    return;
+  }
+  wrap.innerHTML = items.map(p=>`
+    <div class="plcard" data-tag="${p.tag}" data-id="${p.id}">
+      <div class="body">
+        <div class="nm">${escapeHtml(p.name)}</div>
+        <div class="meta">
+          <span class="tagpill" data-tag="${p.tag}">${TAGS[p.tag].label}</span>
+          <span class="cnt">${p.items.length} κομμάτια</span>
+        </div>
+      </div>
+      <button class="dotsbtn" data-id="${p.id}">⋮</button>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.plcard').forEach(card=>{
+    card.addEventListener('click', e=>{
+      if(e.target.closest('.dotsbtn')) return;
+      openPlaylist(card.dataset.id);
+    });
+  });
+  wrap.querySelectorAll('.dotsbtn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      openActionsSheet(btn.dataset.id);
+    });
+  });
+}
+function renderHome(){
+  renderFilters();
+  renderPlaylistList();
+  updateExBadge();
+}
+
+/* ================= PLAYLIST ACTIONS SHEET ================= */
+function openActionsSheet(id){
+  actionsPlaylistId = id;
+  const pl = STATE.playlists.find(p=>p.id===id);
+  if(!pl) return;
+  document.getElementById('plActionsTitle').textContent = pl.name;
+  document.getElementById('plActionsSheet').classList.add('show');
+}
+function closeActionsSheet(){ document.getElementById('plActionsSheet').classList.remove('show'); }
+
+/* ================= PLAYLIST MODAL ================= */
+function setTagPicker(scopeId, tag){
+  document.querySelectorAll('#'+scopeId+' .tagopt').forEach(el=>{
+    el.classList.toggle('sel', el.dataset.tag===tag);
+  });
+}
+function openPlaylistModal(id){
+  editingPlaylistId = id || null;
+  document.getElementById('plModalTitle').textContent = id ? 'Επεξεργασία Playlist' : 'Νέα Playlist';
+  const nameInput = document.getElementById('plNameInput');
+  let tag = 'meleti';
+  if(id){
+    const pl = STATE.playlists.find(p=>p.id===id);
+    nameInput.value = pl.name;
+    tag = pl.tag;
+  } else {
+    nameInput.value = '';
+  }
+  setTagPicker('plTagPicker', tag);
+  document.getElementById('plModal').classList.add('show');
+  setTimeout(()=>nameInput.focus(), 60);
+}
+function closePlaylistModal(){ document.getElementById('plModal').classList.remove('show'); }
+function savePlaylistModal(){
+  const name = document.getElementById('plNameInput').value.trim();
+  if(!name){ toast('Βάλε ένα όνομα για την playlist.'); return; }
+  const selTag = document.querySelector('#plTagPicker .tagopt.sel');
+  const tag = selTag ? selTag.dataset.tag : 'meleti';
+  pushUndo();
+  if(editingPlaylistId){
+    const pl = STATE.playlists.find(p=>p.id===editingPlaylistId);
+    pl.name = name; pl.tag = tag; pl.updatedAt = Date.now();
+  } else {
+    STATE.playlists.unshift({id:uid('pl'), name, tag, items:[], createdAt:Date.now(), updatedAt:Date.now()});
+  }
+  saveState();
+  closePlaylistModal();
+  if(currentPlaylistId && currentPlaylistId===editingPlaylistId) renderDetail();
+  if(!document.getElementById('homeView').hidden) renderHome();
+}
+
+/* ================= DETAIL RENDER ================= */
+function renderDetail(){
+  const pl = currentPlaylist();
+  if(!pl){ goHome(); return; }
+  document.getElementById('dtTitle').textContent = pl.name;
+  document.getElementById('dtTagRow').innerHTML = `<span class="tagpill" data-tag="${pl.tag}">${TAGS[pl.tag].label}</span>`;
+  renderSongList();
+  refreshUndoBtn();
+}
+function renderAttachments(atts){
+  if(!atts || !atts.length) return '';
+  return '<div class="atts">' + atts.map(a=>{
+    if(a.type==='pdf'){
+      return `<span class="attchip pdf" data-type="pdf" data-url="${escapeAttr(a.dataUrl)}">📄 ${escapeHtml(a.name||'PDF')}</span>`;
+    }
+    return `<span class="attchip" data-type="link" data-url="${escapeAttr(a.url)}">🔗 ${escapeHtml(a.label||a.url)}</span>`;
+  }).join('') + '</div>';
+}
+function openAttachment(url){
+  if(!url) return;
+  window.open(url, '_blank', 'noopener');
+}
+function renderSongList(){
+  const pl = currentPlaylist();
+  const wrap = document.getElementById('songlistContainer');
+  if(!pl.items.length){
+    wrap.innerHTML = '<div class="empty">Δεν υπάρχουν κομμάτια ακόμα.<br>Πρόσθεσε το πρώτο!</div>';
+    return;
+  }
+  wrap.innerHTML = pl.items.map((it,i)=>`
+    <div class="songcard" data-id="${it.id}">
+      <div class="draghandle">⠿</div>
+      <div class="idx">${i+1}</div>
+      <div class="body">
+        <div class="nm">${escapeHtml(it.title)}</div>
+        ${it.notes ? `<div class="notes">${escapeHtml(it.notes)}</div>` : ''}
+        ${renderAttachments(it.attachments)}
+      </div>
+      <div class="cardacts">
+        <button class="miniBtn edit" data-id="${it.id}" title="Επεξεργασία">✎</button>
+        <button class="miniBtn del" data-id="${it.id}" title="Διαγραφή">🗑</button>
+      </div>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.miniBtn.edit').forEach(b=>b.addEventListener('click', ()=>openSongModal(b.dataset.id)));
+  wrap.querySelectorAll('.miniBtn.del').forEach(b=>b.addEventListener('click', ()=>{
+    const songId = b.dataset.id;
+    showConfirm('Διαγραφή αυτού του κομματιού;', ()=>{
+      pushUndo();
+      const pl2 = currentPlaylist();
+      pl2.items = pl2.items.filter(x=>x.id!==songId);
+      pl2.updatedAt = Date.now();
+      saveState();
+      renderSongList();
+    });
+  }));
+  wrap.querySelectorAll('.attchip').forEach(chip=>{
+    chip.addEventListener('click', ()=>openAttachment(chip.dataset.url));
+  });
+  enableDrag(wrap);
+}
+
+/* ================= DRAG REORDER ================= */
+function enableDrag(container){
+  container.querySelectorAll('.draghandle').forEach(handle=>{
+    handle.addEventListener('pointerdown', e=>{
+      const card = handle.closest('.songcard');
+      const pointerId = e.pointerId;
+      try{ handle.setPointerCapture(pointerId); }catch(err){}
+      card.classList.add('dragging');
+      let moved = false;
+      const onMove = ev=>{
+        moved = true;
+        const y = ev.clientY;
+        const siblings = [...container.querySelectorAll('.songcard')].filter(c=>c!==card);
+        for(const sib of siblings){
+          const box = sib.getBoundingClientRect();
+          const mid = box.top + box.height/2;
+          if(y < mid){
+            if(sib.previousElementSibling !== card) container.insertBefore(card, sib);
+            break;
+          } else {
+            if(sib.nextElementSibling !== card) container.insertBefore(card, sib.nextSibling);
+          }
+        }
+      };
+      const onUp = ()=>{
+        card.classList.remove('dragging');
+        try{ handle.releasePointerCapture(pointerId); }catch(err){}
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        if(moved) commitReorder(container);
+      };
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+  });
+}
+function commitReorder(container){
+  const ids = [...container.querySelectorAll('.songcard')].map(c=>c.dataset.id);
+  const pl = currentPlaylist();
+  pushUndo();
+  const map = {}; pl.items.forEach(it=>map[it.id]=it);
+  pl.items = ids.map(id=>map[id]).filter(Boolean);
+  pl.updatedAt = Date.now();
+  saveState();
+  renderSongList();
+}
+
+/* ================= SONG MODAL ================= */
+function openSongModal(songId){
+  editingSongId = songId || null;
+  const pl = currentPlaylist();
+  document.getElementById('songModalTitle').textContent = songId ? 'Επεξεργασία Κομματιού' : 'Νέο Κομμάτι';
+  if(songId){
+    const it = pl.items.find(x=>x.id===songId);
+    document.getElementById('songTitleInput').value = it.title;
+    document.getElementById('songNotesInput').value = it.notes||'';
+    pendingAttachments = JSON.parse(JSON.stringify(it.attachments||[]));
+  } else {
+    document.getElementById('songTitleInput').value = '';
+    document.getElementById('songNotesInput').value = '';
+    pendingAttachments = [];
+  }
+  renderPendingAttachments();
+  document.getElementById('songModal').classList.add('show');
+  setTimeout(()=>document.getElementById('songTitleInput').focus(), 60);
+}
+function renderPendingAttachments(){
+  const wrap = document.getElementById('songAttList');
+  if(!pendingAttachments.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = pendingAttachments.map((a,i)=>`
+    <div class="attrow">
+      <span class="lb">${a.type==='pdf' ? '📄 '+escapeHtml(a.name||'PDF') : '🔗 '+escapeHtml(a.label||a.url)}</span>
+      <button class="rm" data-i="${i}">✕</button>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.rm').forEach(b=>b.addEventListener('click', ()=>{
+    pendingAttachments.splice(parseInt(b.dataset.i,10),1);
+    renderPendingAttachments();
+  }));
+}
+function closeSongModal(){ document.getElementById('songModal').classList.remove('show'); }
+function saveSongModal(){
+  const title = document.getElementById('songTitleInput').value.trim();
+  if(!title){ toast('Βάλε τίτλο για το κομμάτι.'); return; }
+  const notes = document.getElementById('songNotesInput').value;
+  const pl = currentPlaylist();
+  pushUndo();
+  if(editingSongId){
+    const it = pl.items.find(x=>x.id===editingSongId);
+    it.title = title; it.notes = notes; it.attachments = pendingAttachments;
+  } else {
+    pl.items.push({id:uid('sg'), title, notes, attachments: pendingAttachments});
+  }
+  pl.updatedAt = Date.now();
+  saveState();
+  closeSongModal();
+  renderSongList();
+}
+
+/* ================= LINK MINI MODAL ================= */
+function openLinkModal(){
+  document.getElementById('linkLabelInput').value='';
+  document.getElementById('linkUrlInput').value='';
+  document.getElementById('linkModal').classList.add('show');
+  setTimeout(()=>document.getElementById('linkUrlInput').focus(), 60);
+}
+function closeLinkModal(){ document.getElementById('linkModal').classList.remove('show'); }
+function saveLinkModal(){
+  let url = document.getElementById('linkUrlInput').value.trim();
+  if(!url){ toast('Βάλε ένα URL.'); return; }
+  if(!/^https?:\/\//i.test(url)) url = 'https://'+url;
+  const label = document.getElementById('linkLabelInput').value.trim();
+  pendingAttachments.push({type:'link', url, label});
+  renderPendingAttachments();
+  closeLinkModal();
+}
+
+/* ================= EXERCISES ================= */
+function isoWeekKey(d){
+  const date = new Date(d); date.setHours(0,0,0,0);
+  date.setDate(date.getDate() + 3 - ((date.getDay()+6)%7));
+  const week1 = new Date(date.getFullYear(),0,4);
+  const wk = 1 + Math.round(((date-week1)/86400000 - 3 + ((week1.getDay()+6)%7))/7);
+  return date.getFullYear()+'-W'+wk;
+}
+function weeklyCount(ex){
+  const wk = isoWeekKey(new Date());
+  return Object.keys(ex.done||{}).filter(d=>isoWeekKey(new Date(d))===wk).length;
+}
+function renderExercises(){
+  const wrap = document.getElementById('exListContainer');
+  if(!STATE.exercises.length){
+    wrap.innerHTML = '<div class="empty">Δεν έχεις προσθέσει ασκήσεις ακόμα.</div>';
+    return;
+  }
+  wrap.innerHTML = STATE.exercises.map(ex=>{
+    const wc = Math.min(3, weeklyCount(ex));
+    const doneToday = !!(ex.done && ex.done[todayStr()]);
+    let dots='';
+    for(let i=0;i<3;i++) dots += `<span class="exdot ${i<wc?'on':''}"></span>`;
+    return `
+    <div class="excard" data-id="${ex.id}">
+      <div class="nm">${escapeHtml(ex.title)}</div>
+      ${ex.notes ? `<div class="notes">${escapeHtml(ex.notes)}</div>` : ''}
+      ${ex.link ? `<div class="exlink"><span class="attchip" data-url="${escapeAttr(ex.link)}">🔗 Link</span></div>` : ''}
+      <div class="row2">
+        <div class="exdots">${dots}<span class="exweeklabel">${wc}/3 ΤΗΝ ΕΒΔΟΜΑΔΑ</span></div>
+        <div class="exbtns">
+          <button class="miniBtn edit" data-id="${ex.id}">✎</button>
+          <button class="miniBtn del" data-id="${ex.id}">🗑</button>
+        </div>
+      </div>
+      <button class="todaybtn ${doneToday?'done':''}" data-id="${ex.id}" style="margin-top:9px;width:100%;">${doneToday?'✓ Έγινε σήμερα':'Σημείωσε ως έγινε σήμερα'}</button>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.miniBtn.edit').forEach(b=>b.addEventListener('click', ()=>openExerciseModal(b.dataset.id)));
+  wrap.querySelectorAll('.miniBtn.del').forEach(b=>b.addEventListener('click', ()=>{
+    const exId = b.dataset.id;
+    showConfirm('Διαγραφή αυτής της άσκησης;', ()=>{
+      pushUndo();
+      STATE.exercises = STATE.exercises.filter(x=>x.id!==exId);
+      saveState(); renderExercises(); updateExBadge();
+    });
+  }));
+  wrap.querySelectorAll('.todaybtn').forEach(b=>b.addEventListener('click', ()=>toggleExerciseToday(b.dataset.id)));
+  wrap.querySelectorAll('.attchip').forEach(chip=>chip.addEventListener('click', ()=>openAttachment(chip.dataset.url)));
+}
+function toggleExerciseToday(id){
+  pushUndo();
+  const ex = STATE.exercises.find(e=>e.id===id);
+  ex.done = ex.done || {};
+  const t = todayStr();
+  if(ex.done[t]) delete ex.done[t]; else ex.done[t] = true;
+  saveState();
+  renderExercises();
+  updateExBadge();
+}
+function updateExBadge(){
+  const due = STATE.exercises.filter(ex=>weeklyCount(ex)<3).length;
+  const badge = document.getElementById('exBadge');
+  if(!badge) return;
+  if(due>0){ badge.hidden=false; badge.textContent = due>9?'9+':String(due); }
+  else badge.hidden = true;
+}
+function openExercisesOverlay(){ renderExercises(); document.getElementById('exOverlay').classList.add('show'); }
+function closeExercisesOverlay(){ document.getElementById('exOverlay').classList.remove('show'); }
+
+function openExerciseModal(id){
+  editingExerciseId = id || null;
+  document.getElementById('exModalTitle').textContent = id ? 'Επεξεργασία Άσκησης' : 'Νέα Άσκηση';
+  if(id){
+    const ex = STATE.exercises.find(e=>e.id===id);
+    document.getElementById('exTitleInput').value = ex.title;
+    document.getElementById('exNotesInput').value = ex.notes||'';
+    document.getElementById('exLinkInput').value = ex.link||'';
+  } else {
+    document.getElementById('exTitleInput').value='';
+    document.getElementById('exNotesInput').value='';
+    document.getElementById('exLinkInput').value='';
+  }
+  document.getElementById('exModal').classList.add('show');
+  setTimeout(()=>document.getElementById('exTitleInput').focus(), 60);
+}
+function closeExerciseModal(){ document.getElementById('exModal').classList.remove('show'); }
+function saveExerciseModal(){
+  const title = document.getElementById('exTitleInput').value.trim();
+  if(!title){ toast('Βάλε τίτλο για την άσκηση.'); return; }
+  const notes = document.getElementById('exNotesInput').value;
+  let link = document.getElementById('exLinkInput').value.trim();
+  if(link && !/^https?:\/\//i.test(link)) link = 'https://'+link;
+  pushUndo();
+  if(editingExerciseId){
+    const ex = STATE.exercises.find(e=>e.id===editingExerciseId);
+    ex.title=title; ex.notes=notes; ex.link=link;
+  } else {
+    STATE.exercises.push({id:uid('ex'), title, notes, link, done:{}});
+  }
+  saveState();
+  closeExerciseModal();
+  renderExercises();
+  updateExBadge();
+}
+
+/* ================= CONFIRM MODAL ================= */
+function showConfirm(msg, onYes){
+  confirmAction = onYes;
+  document.getElementById('confirmMsg').textContent = msg;
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+/* ================= SHARE / IMPORT ================= */
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m,p)=>String.fromCharCode(parseInt(p,16))));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(atob(str).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+function buildShareUrl(pl){
+  const clone = JSON.parse(JSON.stringify(pl));
+  let strippedPdf = false;
+  clone.items = (clone.items||[]).map(it=>{
+    const atts = (it.attachments||[]).filter(a=>{
+      if(a.type==='pdf'){ strippedPdf = true; return false; }
+      return true;
+    });
+    return {title:it.title, notes:it.notes, id:it.id, attachments:atts};
+  });
+  delete clone.id;
+  const json = JSON.stringify(clone);
+  const payload = b64EncodeUnicode(json);
+  const base = location.origin + location.pathname;
+  return {url: base + '#import=' + payload, strippedPdf};
+}
+function shareSpecificPlaylist(id){
+  const pl = STATE.playlists.find(p=>p.id===id);
+  if(!pl) return;
+  const {url, strippedPdf} = buildShareUrl(pl);
+  if(navigator.share){
+    navigator.share({title:pl.name, text:'Playlist: '+pl.name, url}).catch(()=>{});
+  } else {
+    openShareLinkModal(url, strippedPdf);
+  }
+  if(strippedPdf) toast('Τα PDF δεν συμπεριλαμβάνονται στον σύνδεσμο κοινής χρήσης.');
+}
+function openShareLinkModal(url, strippedPdf){
+  document.getElementById('shareLinkOutput').value = url;
+  document.getElementById('shareLinkNote').textContent = strippedPdf
+    ? 'Τα συνημμένα PDF δεν συμπεριλαμβάνονται στον σύνδεσμο (μόνο τα links). Ο παραλήπτης ανοίγει τον σύνδεσμο μέσα στην ίδια εφαρμογή για εισαγωγή.'
+    : 'Ο παραλήπτης ανοίγει τον σύνδεσμο μέσα στην ίδια εφαρμογή για εισαγωγή.';
+  document.getElementById('shareLinkModal').classList.add('show');
+}
+function checkImportFromHash(){
+  const h = location.hash;
+  if(h.indexOf('#import=')===0){
+    const payload = h.slice('#import='.length);
+    try{
+      const json = b64DecodeUnicode(payload);
+      const pl = JSON.parse(json);
+      pl.id = uid('pl');
+      pl.items = (pl.items||[]).map(it=>({...it, id: it.id || uid('sg')}));
+      if(!pl.tag) pl.tag = 'meleti';
+      pl.createdAt = Date.now(); pl.updatedAt = Date.now();
+      showConfirm(`Εισαγωγή της playlist "${pl.name}" με ${pl.items.length} κομμάτια;`, ()=>{
+        pushUndo();
+        STATE.playlists.unshift(pl);
+        saveState();
+        renderHome();
+        toast('Η playlist προστέθηκε!');
+      });
+    }catch(e){
+      toast('Ο σύνδεσμος εισαγωγής δεν ήταν έγκυρος.');
+    }
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+}
+
+/* ================= STATIC EVENT WIRING ================= */
+document.getElementById('newPlaylistBtn').addEventListener('click', ()=>openPlaylistModal(null));
+document.getElementById('backBtn').addEventListener('click', goHome);
+document.getElementById('undoBtn').addEventListener('click', doUndo);
+const homeUndoBtnEl = document.getElementById('homeUndoBtn');
+if(homeUndoBtnEl) homeUndoBtnEl.addEventListener('click', doUndo);
+document.getElementById('shareBtn').addEventListener('click', ()=>{ if(currentPlaylistId) shareSpecificPlaylist(currentPlaylistId); });
+document.getElementById('addSongBtn').addEventListener('click', ()=>openSongModal(null));
+document.getElementById('exBtn').addEventListener('click', openExercisesOverlay);
+document.getElementById('exCloseBtn').addEventListener('click', closeExercisesOverlay);
+document.getElementById('addExBtn').addEventListener('click', ()=>openExerciseModal(null));
+document.getElementById('dtTitle').addEventListener('click', ()=>{ if(currentPlaylistId) openPlaylistModal(currentPlaylistId); });
+
+document.getElementById('plTagPicker').addEventListener('click', e=>{
+  const opt = e.target.closest('.tagopt');
+  if(!opt) return;
+  setTagPicker('plTagPicker', opt.dataset.tag);
+});
+document.getElementById('plModalCloseBtn').addEventListener('click', closePlaylistModal);
+document.getElementById('plModalCancelBtn').addEventListener('click', closePlaylistModal);
+document.getElementById('plModalSaveBtn').addEventListener('click', savePlaylistModal);
+
+document.getElementById('songModalCloseBtn').addEventListener('click', closeSongModal);
+document.getElementById('songModalCancelBtn').addEventListener('click', closeSongModal);
+document.getElementById('songModalSaveBtn').addEventListener('click', saveSongModal);
+document.getElementById('addLinkBtn').addEventListener('click', openLinkModal);
+document.getElementById('addPdfBtn').addEventListener('click', ()=>document.getElementById('pdfFileInput').click());
+document.getElementById('pdfFileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 4*1024*1024){
+    toast('Το PDF είναι μεγάλο (>4MB) — μπορεί να γεμίσει τον χώρο αποθήκευσης του browser.');
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    pendingAttachments.push({type:'pdf', name:file.name, dataUrl:reader.result});
+    renderPendingAttachments();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+document.getElementById('linkModalCloseBtn').addEventListener('click', closeLinkModal);
+document.getElementById('linkModalCancelBtn').addEventListener('click', closeLinkModal);
+document.getElementById('linkModalSaveBtn').addEventListener('click', saveLinkModal);
+
+document.getElementById('exModalCloseBtn').addEventListener('click', closeExerciseModal);
+document.getElementById('exModalCancelBtn').addEventListener('click', closeExerciseModal);
+document.getElementById('exModalSaveBtn').addEventListener('click', saveExerciseModal);
+
+document.getElementById('plActionsCloseBtn').addEventListener('click', closeActionsSheet);
+document.getElementById('actOpen').addEventListener('click', ()=>{ closeActionsSheet(); openPlaylist(actionsPlaylistId); });
+document.getElementById('actRename').addEventListener('click', ()=>{ closeActionsSheet(); openPlaylistModal(actionsPlaylistId); });
+document.getElementById('actShare').addEventListener('click', ()=>{ closeActionsSheet(); shareSpecificPlaylist(actionsPlaylistId); });
+document.getElementById('actDelete').addEventListener('click', ()=>{
+  closeActionsSheet();
+  const pl = STATE.playlists.find(p=>p.id===actionsPlaylistId);
+  if(!pl) return;
+  showConfirm(`Διαγραφή της playlist "${pl.name}";`, ()=>{
+    pushUndo();
+    STATE.playlists = STATE.playlists.filter(p=>p.id!==actionsPlaylistId);
+    saveState();
+    renderHome();
+  });
+});
+
+document.getElementById('confirmYes').addEventListener('click', ()=>{
+  document.getElementById('confirmOverlay').classList.remove('show');
+  const fn = confirmAction; confirmAction=null;
+  if(fn) fn();
+});
+document.getElementById('confirmNo').addEventListener('click', ()=>{
+  document.getElementById('confirmOverlay').classList.remove('show');
+  confirmAction=null;
+});
+
+document.getElementById('shareLinkCloseBtn').addEventListener('click', ()=>document.getElementById('shareLinkModal').classList.remove('show'));
+document.getElementById('shareLinkCloseBtn2').addEventListener('click', ()=>document.getElementById('shareLinkModal').classList.remove('show'));
+document.getElementById('shareLinkCopyBtn').addEventListener('click', async ()=>{
+  const val = document.getElementById('shareLinkOutput').value;
+  try{
+    await navigator.clipboard.writeText(val);
+    toast('Ο σύνδεσμος αντιγράφηκε!');
+  }catch(e){
+    document.getElementById('shareLinkOutput').select();
+    toast('Επίλεξε και αντέγραψε τον σύνδεσμο.');
+  }
+});
+
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click', e=>{
+    if(e.target === ov) ov.classList.remove('show');
+  });
+});
+
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Escape') return;
+  document.querySelectorAll('.overlay.show').forEach(ov=>ov.classList.remove('show'));
+});
+
+/* ================= INIT ================= */
+function registerSW(){
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+}
+checkImportFromHash();
+renderHome();
+refreshUndoBtn();
+registerSW();
+
+</script>
+</body>
+</html>
